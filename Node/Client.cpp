@@ -4,7 +4,8 @@
 
 #include "Client.h"
 
-Client::Client(Addresses* _addresses, list<string>* _nodes, map<string, int>* _vc) {
+Client::Client(string _name, Addresses* _addresses, list<string>* _nodes, map<string, int>* _vc) {
+    name = _name;
     addresses = _addresses;
     nodes = _nodes;
     vc = _vc;
@@ -246,7 +247,7 @@ void Client::send_message(string connit) {
     (*vc)[node_addr]++;
     
     string message(MESSAGE);
-    message.append(" ").append(addresses->node_host).append(" ").append(to_string(addresses->node_port)).append(MESSAGE_SEPARATOR_ARG).append(format_vector_clock()).append(MESSAGE_SEPARATOR_ARG).append(connit).append(NET_EOM);
+    message.append(" ").append(addresses->node_host).append(" ").append(to_string(addresses->node_port)).append(MESSAGE_SEPARATOR_ARG).append(format_vector_clock()).append(MESSAGE_SEPARATOR_ARG).append("[").append(name.empty() ? "Anonimo" : name).append("]: ").append(connit).append(NET_EOM);
     
     cout << endl << "> " << message << endl;
     

@@ -5,7 +5,7 @@
 #ifndef NODE_CLIENT_H
 #define NODE_CLIENT_H
 
-#include "header.cpp"
+#include "header.h"
 #include <random>
 
 #define NODES "-nodes"
@@ -21,13 +21,14 @@ typedef struct {
 class Client {
     
 private:
+    string name;
     Addresses* addresses;
     int socket;
     list<string>* nodes;
     map<string, int>* vc;
     
 public:
-    Client(Addresses*, list<string>*, map<string, int>*);
+    Client(string, Addresses*, list<string>*, map<string, int>*);
     void conect(string, string);
     void send(string);
     void end_message();

@@ -250,7 +250,7 @@ void Server::deliver_message(string connit) {
             cout << "> " << text_message << endl;
             
         } else {
-            messages_queue.push(connit);
+            messages_queue.push_back(connit);
             cout << "wait messages to sync vector clock [message pushed queue]" << endl;
         }
         
@@ -320,15 +320,56 @@ bool Server::is_vector_clock_sync(string list_vc_sender, string node_addr_sender
     return is_sync;
 }
 
+bool Server::is_vector_clock_lq(string list_vc) {
+    
+    bool is_sync = true;
+    StringTokenizer tokenizer(list_vc, LIST_SEPARATOR);
+    
+    for (int i = 0; i < tokenizer.countTokens(); i++) {
+        
+        string* vc_tokens = parse_vector_clock(tokenizer.nextToken());
+        string node_addr = vc_tokens[0];
+        int value = std::atoi(vc_tokens[1].c_str());
+        
+        if (value > (*vc)[node_addr]) {
+            is_sync = false;
+            break;
+        }
+    }
+    
+    return is_sync;
+}
+
 list<string> Server::check_queue_messages() {
     
     list<string> poped_messages;
     
-    
+    for (list<string>::iterator it = messages_queue.begin(); it != messages_queue.end(); it++) {
+        
+        string connit = *it;
+        string* tokens = format_connit_message(connit);
+        
+        if (tokens != NULL) {
+            
+            string node_addr_sender = tokens[0];
+            string vc_list_sender = tokens[1];
+            string text_message = tokens[2];
+            
+            if (is_vector_clock_lq(vc_list_sender)) {
+                poped_messages.push_back(text_message);
+            }
+            
+        }
+        
+    }
     
     return poped_messages;
 }
 
 void Server::print_messages(list<string> messages) {
+    
+    for (list<string>::iterator it = messages.begin(); it != messages.end(); it++) {
+        cout << "> " << *it << endl;
+    }
     
 }

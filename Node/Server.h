@@ -5,7 +5,7 @@
 #ifndef NODE_SERVER_H
 #define NODE_SERVER_H
 
-#include "header.cpp"
+#include "header.h"
 #include <queue>
 
 using namespace std;
@@ -15,7 +15,7 @@ class Server {
 private:
     list<string>* nodes;
     map<string, int>* vc;
-    queue<string> messages_queue;
+    list<string> messages_queue;
     
 public:
     Server(list<string>*, map<string, int>*);
@@ -34,6 +34,7 @@ public:
     string* parse_vector_clock(string);
     string* format_connit_message(string);
     bool is_vector_clock_sync(string, string);
+    bool is_vector_clock_lq(string);
     list<string> check_queue_messages();
     void print_messages(list<string>);
 };

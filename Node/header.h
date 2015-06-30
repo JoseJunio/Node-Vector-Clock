@@ -27,7 +27,7 @@
 #define MESSAGE "-message"
 
 typedef struct {
-    std::string host;
+    std::string host, name;
     int port;
 } Address;
 

@@ -40,7 +40,7 @@ void* client_handler(void* o) {
     addresses.node_port = addr->port;
     
     // instace client
-    Client c(&addresses, &nodes, &vc);
+    Client c(addr->name, &addresses, &nodes, &vc);
     
     // send new node from tracker to register it
     c.new_node();
@@ -64,7 +64,7 @@ void* client_handler(void* o) {
             cout << c.get_nodes() << endl;
         } else if (o == MENU_NEW_MESSAGE) {
             
-            string message;
+            string message, message_full;
             getline(cin, message);
             
             c.send_message(message);

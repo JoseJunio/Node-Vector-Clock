@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BE0DB11B1B3DB38E00D603C7 /* header.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE0DB11A1B3DB38E00D603C7 /* header.cpp */; };
+		BE0DB11B1B3DB38E00D603C7 /* header.h in Sources */ = {isa = PBXBuildFile; fileRef = BE0DB11A1B3DB38E00D603C7 /* header.h */; };
 		BE2FD8221B3D0C81008DB0A5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE2FD8211B3D0C81008DB0A5 /* main.cpp */; };
 		BEF7C0C01B3D107E00E49524 /* Client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEF7C0BE1B3D107E00E49524 /* Client.cpp */; };
 		BEF7C0C31B3D109200E49524 /* Server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEF7C0C11B3D109200E49524 /* Server.cpp */; };
@@ -27,7 +27,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		BE0DB11A1B3DB38E00D603C7 /* header.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = header.cpp; sourceTree = "<group>"; };
+		BE0DB11A1B3DB38E00D603C7 /* header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = header.h; sourceTree = "<group>"; };
 		BE2FD81E1B3D0C81008DB0A5 /* Node */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Node; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE2FD8211B3D0C81008DB0A5 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		BEF7C0BE1B3D107E00E49524 /* Client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Client.cpp; sourceTree = "<group>"; };
@@ -83,7 +83,7 @@
 				BEF7C0C21B3D109200E49524 /* Server.h */,
 				BEF7C0BE1B3D107E00E49524 /* Client.cpp */,
 				BEF7C0BF1B3D107E00E49524 /* Client.h */,
-				BE0DB11A1B3DB38E00D603C7 /* header.cpp */,
+				BE0DB11A1B3DB38E00D603C7 /* header.h */,
 			);
 			name = classes;
 			sourceTree = "<group>";
@@ -144,7 +144,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BE0DB11B1B3DB38E00D603C7 /* header.cpp in Sources */,
+				BE0DB11B1B3DB38E00D603C7 /* header.h in Sources */,
 				BEF7C0C01B3D107E00E49524 /* Client.cpp in Sources */,
 				BEF7C0C31B3D109200E49524 /* Server.cpp in Sources */,
 				BEF7C0C61B3D10A100E49524 /* StringTokenizer.cpp in Sources */,
