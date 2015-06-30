@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <list>
+#include <map>
 #include <netdb.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -16,14 +17,18 @@
 #define MAX_DATA_SIZE 1024
 #define NET_EOM "\r\n\r\n"
 
-#define CONNIT_SEPARATOR "\n"
+#define PRINT_SEPARATOR "\n"
+#define MESSAGE_SEPARATOR_ARG "|"
+#define VECTOR_CLOCK_KEY_VALUE_SEPARATOR ":"
 #define LIST_SEPARATOR ","
 
-#define ADD "-add"
-#define DELETE "-delete"
+#define NEW_NODE "-new"
+#define VC "-vc"
+#define MESSAGE "-message"
 
 typedef struct {
-    std::string host, port;
+    std::string host;
+    int port;
 } Address;
 
 #endif

@@ -12,7 +12,6 @@
 		BEF7C0C01B3D107E00E49524 /* Client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEF7C0BE1B3D107E00E49524 /* Client.cpp */; };
 		BEF7C0C31B3D109200E49524 /* Server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEF7C0C11B3D109200E49524 /* Server.cpp */; };
 		BEF7C0C61B3D10A100E49524 /* StringTokenizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEF7C0C41B3D10A100E49524 /* StringTokenizer.cpp */; };
-		BEF7C0C91B3D10B200E49524 /* Tokenizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEF7C0C71B3D10B200E49524 /* Tokenizer.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -37,8 +36,6 @@
 		BEF7C0C21B3D109200E49524 /* Server.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Server.h; sourceTree = "<group>"; };
 		BEF7C0C41B3D10A100E49524 /* StringTokenizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StringTokenizer.cpp; sourceTree = "<group>"; };
 		BEF7C0C51B3D10A100E49524 /* StringTokenizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StringTokenizer.h; sourceTree = "<group>"; };
-		BEF7C0C71B3D10B200E49524 /* Tokenizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Tokenizer.cpp; sourceTree = "<group>"; };
-		BEF7C0C81B3D10B200E49524 /* Tokenizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Tokenizer.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,8 +77,6 @@
 		BEF7C0BD1B3D103E00E49524 /* classes */ = {
 			isa = PBXGroup;
 			children = (
-				BEF7C0C71B3D10B200E49524 /* Tokenizer.cpp */,
-				BEF7C0C81B3D10B200E49524 /* Tokenizer.h */,
 				BEF7C0C41B3D10A100E49524 /* StringTokenizer.cpp */,
 				BEF7C0C51B3D10A100E49524 /* StringTokenizer.h */,
 				BEF7C0C11B3D109200E49524 /* Server.cpp */,
@@ -154,7 +149,6 @@
 				BEF7C0C31B3D109200E49524 /* Server.cpp in Sources */,
 				BEF7C0C61B3D10A100E49524 /* StringTokenizer.cpp in Sources */,
 				BE2FD8221B3D0C81008DB0A5 /* main.cpp in Sources */,
-				BEF7C0C91B3D10B200E49524 /* Tokenizer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

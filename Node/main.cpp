@@ -2,9 +2,16 @@
 #include "Server.h"
 
 #define TRACKER_HOST "127.0.0.1"
-#define TRACKER_PORT "65000"
+#define TRACKER_PORT 65000
+
+#define MENU_PRINT_NODES 1
+#define MENU_NEW_MESSAGE 2
+#define MENU_PRINT_VC 3
 
 using namespace std;
+
+list<string> nodes;
+map<string, int> vc;
 
 void* server_handler(void* o) {
     
@@ -12,8 +19,8 @@ void* server_handler(void* o) {
     
     Address* addr = (Address*) o;
     
-    Server s;
-    s.start(addr->host, addr->port);
+    Server s(&nodes, &vc);
+    s.start(to_string(addr->port));
     
     return NULL;
 }
@@ -25,10 +32,28 @@ void* client_handler(void* o) {
     cout << endl;
     
     Address* addr = (Address*) o;
-    Client c(TRACKER_HOST, TRACKER_PORT);
     
-    // send new node from tracker
-    c.new_node(addr->host, addr->port);
+    Addresses addresses;
+    addresses.tracker_host = TRACKER_HOST;
+    addresses.tracker_port = TRACKER_PORT;
+    addresses.node_host = addr->host;
+    addresses.node_port = addr->port;
+    
+    // instace client
+    Client c(&addresses, &nodes, &vc);
+    
+    // send new node from tracker to register it
+    c.new_node();
+    
+    /**
+     Syncronize current vector clock with other node at net
+     */
+    c.sync_vector_clock();
+    
+    /**
+     Send broadcast message to all nodes in tracker to register this node at their list nodes
+     */
+    c.broadcast_new_node();
     
     while (1) {
         
@@ -37,22 +62,18 @@ void* client_handler(void* o) {
         
         if (o == MENU_PRINT_NODES) {
             cout << c.get_nodes() << endl;
-        } else if (o == MENU_ADD) {
+        } else if (o == MENU_NEW_MESSAGE) {
             
-            string key, value;
+            string message;
+            getline(cin, message);
             
-            cout << "key: ";
-            getline(cin, key);
+            c.send_message(message);
             
-            cout << "value: ";
-            getline(cin, value);
-            
-            string connit = c.make_connit(key, value);
-            c.add(connit);
-            
-        } else if (o == MENU_DELETE) {
-            
+        } else if (o == MENU_PRINT_VC) {
+            cout << c.format_vector_clock() << endl;
         }
+        
+        cout.flush();
         
     }
     
@@ -68,7 +89,7 @@ int main(int argc, const char * argv[]) {
     
     Address address;
     address.host = argv[1];
-    address.port = argv[2];
+    address.port = atoi(argv[2]);
     
     pthread_t t_server, t_client;
     

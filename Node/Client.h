@@ -6,36 +6,45 @@
 #define NODE_CLIENT_H
 
 #include "header.cpp"
+#include <random>
 
-#define NEW_NODE "-new"
 #define NODES "-nodes"
 
-#define MENU_PRINT_NODES 1
-#define MENU_ADD 2
-#define MENU_DELETE 3
-
 using namespace std;
+
+typedef struct {
+    string tracker_host, node_host;
+    int tracker_port, node_port;
+    
+} Addresses;
 
 class Client {
     
 private:
-    string host_tracker, port_tracker;
+    Addresses* addresses;
     int socket;
-    list<string> nodes;
+    list<string>* nodes;
+    map<string, int>* vc;
     
 public:
-    Client(string, string);
+    Client(Addresses*, list<string>*, map<string, int>*);
     void conect(string, string);
     void send(string);
     void end_message();
     string receive();
     void close();
     void *get_in_addr(struct sockaddr*);
-    void new_node(string, string);
-    void add(string);
+    void new_node();
+    void sync_vector_clock();
+    void broadcast_new_node();
+    void send_message(string);
     string make_connit(string, string);
     string get_nodes();
+    string format_vector_clock();
     int menu();
+    string* random_addr();
+    void update_vc(string);
+    string* format_addr(string);
 };
 
 

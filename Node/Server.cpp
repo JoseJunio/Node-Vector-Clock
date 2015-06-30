@@ -4,7 +4,12 @@
 
 #include "Server.h"
 
-void Server::start(string host, string port) {
+Server::Server(list<string>* _nodes, map<string, int>* _vc) {
+    nodes = _nodes;
+    vc = _vc;
+}
+
+void Server::start(string port) {
     
     pthread_t thread_handler_request;
     int sockfd = 0, new_fd;  // listen on sock_fd, new connection on new_fd
@@ -65,7 +70,6 @@ void Server::start(string host, string port) {
         
         sin_size = sizeof their_addr;
         
-        cout << "> Waiting connection" << endl;
         new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &sin_size);
         
         if (new_fd == -1) {
@@ -74,11 +78,13 @@ void Server::start(string host, string port) {
         }
         
         inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *) &their_addr), s, sizeof s);
+        int port = get_in_port((struct sockaddr *) &their_addr);
         
         Helper helper;
         helper.server = this;
         helper.socket = new_fd;
         helper.addr = s;
+        helper.port = port;
         
         pthread_create(&thread_handler_request, NULL, &Server::handler_request, &helper);
         
@@ -94,13 +100,34 @@ void *Server::handler_request(void *o) {
     int socket = helper->socket;
     
     // get data from client and process it
-    server->process(server->receive(socket));
+    server->process(server->receive(socket), socket);
     
     // close socket client, work done !
     close(helper->socket);
     
     return NULL;
 }
+
+void Server::process(string message, int socket) {
+    
+    if (message.empty())
+        return;
+    
+    cout << endl;
+    
+    // print request message from client
+    cout << "> [new message]" << " " << message << endl;
+    
+    if (message.find(VC) != string::npos) {
+        send(socket, vector_clock_to_string().append(NET_EOM));
+    } else if (message.find(NEW_NODE) != string::npos) {
+        add_new_node(message.substr(strlen(NEW_NODE) + 1, message.length()));
+    } else if (message.find(MESSAGE) != string::npos) {
+        deliver_message(message.substr(strlen(MESSAGE) + 1, message.length()));
+    }
+    
+}
+
 
 void Server::send(int socket, string message) {
     
@@ -144,33 +171,164 @@ void* Server::get_in_addr(struct sockaddr *sa) {
 int Server::get_in_port(struct sockaddr *sa) {
     
     if (sa->sa_family == AF_INET) {
-        return ntohs((((struct sockaddr_in*)sa)->sin_port));
+        return (((struct sockaddr_in*)sa)->sin_port);
     }
     
-    return ntohs((((struct sockaddr_in6*)sa)->sin6_port));
+    return (((struct sockaddr_in6*)sa)->sin6_port);
 }
 
-void Server::process(string data) {
+string Server::vector_clock_to_string() {
     
-    if (data.empty()) {
-        return;
+    if ((*vc).empty())
+        return NULL;
+    
+    string vc_str("");
+    
+    for (map<string,int>::iterator it = (*vc).begin(); it != (*vc).end(); it++)
+        vc_str.append((*it).first).append(VECTOR_CLOCK_KEY_VALUE_SEPARATOR).append(to_string((*it).second)).append(LIST_SEPARATOR);
+    
+    return vc_str.substr(0, vc_str.size() - strlen(LIST_SEPARATOR));
+}
+
+void Server::add_new_node(string node_str) {
+    // add new node addr to list
+    (*nodes).push_back(node_str);
+    
+    // add new node to vector clock with default initialize
+    (*vc).insert(make_pair(node_str, 0));
+}
+
+string* Server::format_connit_message(string connit) {
+    
+    int first_index_arg = (int)connit.find(MESSAGE_SEPARATOR_ARG);
+    int second_index_arg = (int)connit.find(MESSAGE_SEPARATOR_ARG, first_index_arg + 1);
+    
+    if (first_index_arg != string::npos && second_index_arg != string::npos) {
+        
+        string* tokens = new string[3];
+        
+        string node_addr_sender = connit.substr(0, first_index_arg);
+        string vc_list_sender = connit.substr(first_index_arg + 1, second_index_arg - first_index_arg - 1);
+        string text_message = connit.substr(second_index_arg + 1);
+        
+        tokens[0] = node_addr_sender;
+        tokens[1] = vc_list_sender;
+        tokens[2] = text_message;
+        
+        return tokens;
     }
     
-    cout << "> [client]: " << data;
+    return NULL;
+}
+
+/**
+ Check if vector clock that node is correct with this node
+ */
+void Server::deliver_message(string connit) {
     
-    if (data.find(ADD) != string::npos) {
+    string* message_tokens = format_connit_message(connit);
+    
+    if (message_tokens != NULL) {
         
-    } else if (data.find(DELETE) != string::npos) {
+        string node_addr_sender = message_tokens[0];
+        string vc_list_sender = message_tokens[1];
+        string text_message = message_tokens[2];
+        
+        //        cout << "[node address sender]: " << node_addr_sender << "; [vc list sender]: " << vc_list_sender << endl;
+        
+        if (is_vector_clock_sync(vc_list_sender, node_addr_sender)) {
+            
+            // increment clock node sender
+            (*vc)[node_addr_sender]++;
+            
+            // check whether queue has messages not syncronizable
+            list<string> messages_poped = check_queue_messages();
+            
+            // print in view messages poped from
+            print_messages(messages_poped);
+            
+            cout << "> " << text_message << endl;
+            
+        } else {
+            messages_queue.push(connit);
+            cout << "wait messages to sync vector clock [message pushed queue]" << endl;
+        }
+        
+    } else
+        cout << "Incorrect message format" << endl;
+    
+    
+    cout.flush();
+}
+
+string* Server::format_addr(string addr) {
+    
+    string* addr_tokens = new string[2];
+    StringTokenizer tokenizer(addr, " ");
+    
+    addr_tokens[0] = tokenizer.nextToken();
+    addr_tokens[1] = tokenizer.nextToken();
+    
+    return addr_tokens;
+}
+
+string* Server::parse_vector_clock(string vc) {
+    
+    string* tokens = new string[2];
+    StringTokenizer tokenizer(vc, VECTOR_CLOCK_KEY_VALUE_SEPARATOR);
+    
+    tokens[0] = tokenizer.nextToken();
+    tokens[1] = tokenizer.nextToken();
+    
+    return tokens;
+}
+
+/**
+ */
+bool Server::is_vector_clock_sync(string list_vc_sender, string node_addr_sender) {
+    
+    bool is_sync = true;
+    StringTokenizer tokenizer(list_vc_sender, LIST_SEPARATOR);
+    
+    for (int i = 0; i < tokenizer.countTokens(); i++) {
+        
+        string* vc_tokens = parse_vector_clock(tokenizer.nextToken());
+        
+        string node_addr = vc_tokens[0];
+        int value_local = std::atoi(vc_tokens[1].c_str());
+        
+        if (node_addr_sender.compare(node_addr) != 0) {
+            
+            if (value_local > (*vc)[node_addr]) {
+                cout << "is not equal nodes " << value_local << " is gt " << (*vc)[node_addr] << endl;
+                is_sync = false;
+                break;
+            }
+            
+        } else {
+            
+            if (value_local != ((*vc)[node_addr] + 1)) {
+                cout << "is equal nodes " << value_local << " <> " << (*vc)[node_addr] + 1 << endl;
+                is_sync = false;
+                break;
+            }
+            
+        }
         
     }
     
-    StringTokenizer tokenizer(data, CONNIT_SEPARATOR);
+    return is_sync;
+}
+
+list<string> Server::check_queue_messages() {
     
-    if (tokenizer.countTokens() != 2)
-        return;
+    list<string> poped_messages;
     
-    string key = tokenizer.nextToken(), value = tokenizer.nextToken();
     
-    cout << "> [" << key << " : " << value << "]" << endl;
+    
+    return poped_messages;
+}
+
+void Server::print_messages(list<string> messages) {
     
 }
