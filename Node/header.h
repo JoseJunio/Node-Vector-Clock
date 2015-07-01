@@ -12,10 +12,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <sstream>
 #include "StringTokenizer.h"
 
 #define MAX_DATA_SIZE 1024
 #define NET_EOM "\r\n\r\n"
+#define DEBUG_NODE false
 
 #define PRINT_SEPARATOR "\n"
 #define MESSAGE_SEPARATOR_ARG "|"

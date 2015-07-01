@@ -15,7 +15,7 @@ map<string, int> vc;
 
 void* server_handler(void* o) {
     
-    cout << endl;
+    cout << "Thread Server [OK]" << endl << endl;
     
     Address* addr = (Address*) o;
     
@@ -29,9 +29,12 @@ void* client_handler(void* o) {
     
     sleep(1);
     
+    cout << "Thread Client [OK]" << endl << endl;
+    
     cout << endl;
     
     Address* addr = (Address*) o;
+    stringstream ss;
     
     Addresses addresses;
     addresses.tracker_host = TRACKER_HOST;
@@ -40,7 +43,7 @@ void* client_handler(void* o) {
     addresses.node_port = addr->port;
     
     // instace client
-    Client c(addr->name, &addresses, &nodes, &vc);
+    Client c(&addresses, &nodes, &vc);
     
     // send new node from tracker to register it
     c.new_node();
@@ -53,27 +56,54 @@ void* client_handler(void* o) {
     /**
      Send broadcast message to all nodes in tracker to register this node at their list nodes
      */
-    c.broadcast_new_node();
+    c.broadcast_new_node(addr->name.empty() ? "Anonimo" : addr->name);
     
-    while (1) {
+    // username
+    ss << "[" << (addr->name.empty() ? "Anonimo" : addr->name)  << "]: ";
+    
+    if (!DEBUG_NODE)
+        cout << "############## CHAT ##############" << endl << endl;
+    
+    if (DEBUG_NODE) {
         
-        int o = c.menu();
-        cin.ignore();
-        
-        if (o == MENU_PRINT_NODES) {
-            cout << c.get_nodes() << endl;
-        } else if (o == MENU_NEW_MESSAGE) {
+        while (1) {
             
-            string message, message_full;
-            getline(cin, message);
+            int o = c.menu();
+            cin.ignore();
             
-            c.send_message(message);
+            if (o == MENU_PRINT_NODES) {
+                cout << endl << c.get_nodes() << endl;
+            } else if (o == MENU_NEW_MESSAGE) {
+                
+                string message, message_full;
+                
+                getline(cin, message);
+                
+                message_full.append(ss.str()).append(message);
+                
+                c.send_message(message_full);
+                
+            } else if (o == MENU_PRINT_VC) {
+                cout << endl << c.format_vector_clock() << endl;
+            }
             
-        } else if (o == MENU_PRINT_VC) {
-            cout << c.format_vector_clock() << endl;
+            cout.flush();
         }
         
-        cout.flush();
+    } else {
+        
+        while (1) {
+            
+            string message, message_full;
+            
+            getline(cin, message);
+            
+            message_full.append(ss.str()).append(message);
+            
+            c.send_message(message_full);
+            
+            cout.flush();
+        }
         
     }
     
@@ -82,7 +112,7 @@ void* client_handler(void* o) {
 
 int main(int argc, const char * argv[]) {
     
-    if (argc != 3) {
+    if (argc < 3) {
         cout << "Enter node host and port" << endl;
         exit(1);
     }
@@ -90,6 +120,9 @@ int main(int argc, const char * argv[]) {
     Address address;
     address.host = argv[1];
     address.port = atoi(argv[2]);
+    
+    if (argv[3] != NULL)
+        address.name = argv[3];
     
     pthread_t t_server, t_client;
     

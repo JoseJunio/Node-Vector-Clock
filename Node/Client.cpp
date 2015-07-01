@@ -4,8 +4,7 @@
 
 #include "Client.h"
 
-Client::Client(string _name, Addresses* _addresses, list<string>* _nodes, map<string, int>* _vc) {
-    name = _name;
+Client::Client(Addresses* _addresses, list<string>* _nodes, map<string, int>* _vc) {
     addresses = _addresses;
     nodes = _nodes;
     vc = _vc;
@@ -27,7 +26,6 @@ void Client::conect(string host, string port) {
     hints.ai_socktype = SOCK_STREAM;
     
     if ((rv = getaddrinfo(host.c_str(), port.c_str(), &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return;
     }
     
@@ -35,13 +33,11 @@ void Client::conect(string host, string port) {
     for (p = servinfo; p != NULL; p = p->ai_next) {
         
         if ((socket = ::socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            perror("> Socket");
             continue;
         }
         
         if (connect(socket, p->ai_addr, p->ai_addrlen) == -1) {
             ::close(socket);
-            perror("> Connect");
             continue;
         }
         
@@ -49,12 +45,20 @@ void Client::conect(string host, string port) {
     }
     
     if (p == NULL) {
-        fprintf(stderr, "> Failed to connect\n");
+        
+        stringstream ss;
+        ss << endl << "> Falha ao enviar para " << host << ":" << port << ". Nó não esta ONLINE" << endl << endl;
+        
+        // throw exception with message
+        throw ss.str();
+        
         return;
     }
     
     inet_ntop(p->ai_family, get_in_addr((struct sockaddr *) p->ai_addr), s, sizeof s);
-    cout << "> Try connecting at " << host << ":" << port << endl;
+    
+    if (DEBUG_NODE)
+        cout << "> Try connecting at " << host << ":" << port << endl;
     
     freeaddrinfo(servinfo); // all done with this structure
 }
@@ -160,15 +164,15 @@ void Client::new_node() {
             string addr = tokenizer.nextToken();
             
             // check if addr is same the my addr, otherwise add to nodes
-            if (!addr.compare(my_addr)) {
-                cout << "> My address " << addr << endl;
-            } else {
+            if (addr.compare(my_addr)) {
                 (*nodes).push_back(addr);
+            } else if (DEBUG_NODE) {
+                cout << "> My address " << addr << endl;
             }
             
         }
         
-    } else {
+    } else if (DEBUG_NODE) {
         cout << "> No nodes active in tracker." << endl;
     }
     
@@ -200,7 +204,8 @@ void Client::sync_vector_clock() {
     string list_str_vc = receive();
     close();
     
-    cout << "> Syncronizing vector clock local" << endl << endl;
+    if (DEBUG_NODE)
+        cout << "> Syncronizing vector clock local" << endl << endl;
     
     // update list vector clock's string
     update_vc(list_str_vc);
@@ -210,7 +215,7 @@ void Client::sync_vector_clock() {
 /**
  Send broadcast message for all nodes in tracker to add this node in their list
  */
-void Client::broadcast_new_node() {
+void Client::broadcast_new_node(string username) {
     
     for (list<string>::iterator it = (*nodes).begin(); it != (*nodes).end(); it++) {
         
@@ -221,14 +226,15 @@ void Client::broadcast_new_node() {
         
         // make expression to send server node
         string expression(NEW_NODE);
-        expression.append(" ").append(addresses->node_host).append(" ").append(to_string(addresses->node_port)).append(NET_EOM);
+        expression.append(" ").append(addresses->node_host).append(" ").append(to_string(addresses->node_port)).append(MESSAGE_SEPARATOR_ARG).append(username).append(NET_EOM);
         
         // connect node and send address of node
         conect(tokens[0], tokens[1]);
         send(expression);
         close();
         
-        cout << "> Sending broadcast address" << endl << endl;
+        if (DEBUG_NODE)
+            cout << "> Sending broadcast address" << endl << endl;
     }
     
 }
@@ -236,7 +242,10 @@ void Client::broadcast_new_node() {
 void Client::send_message(string connit) {
     
     if ((*nodes).empty()) {
-        cout << "> No nodes activity in tracker" << endl;
+        
+        if (DEBUG_NODE)
+            cout << "> No nodes activity in tracker" << endl;
+        
         return;
     }
     
@@ -247,9 +256,10 @@ void Client::send_message(string connit) {
     (*vc)[node_addr]++;
     
     string message(MESSAGE);
-    message.append(" ").append(addresses->node_host).append(" ").append(to_string(addresses->node_port)).append(MESSAGE_SEPARATOR_ARG).append(format_vector_clock()).append(MESSAGE_SEPARATOR_ARG).append("[").append(name.empty() ? "Anonimo" : name).append("]: ").append(connit).append(NET_EOM);
+    message.append(" ").append(addresses->node_host).append(" ").append(to_string(addresses->node_port)).append(MESSAGE_SEPARATOR_ARG).append(format_vector_clock()).append(MESSAGE_SEPARATOR_ARG).append(connit).append(NET_EOM);
     
-    cout << endl << "> " << message << endl;
+    if (DEBUG_NODE)
+        cout << endl << "> " << message << endl;
     
     list<string>::iterator it;
     
@@ -260,8 +270,13 @@ void Client::send_message(string connit) {
         StringTokenizer tokenizer(node_addr, " ");
         string host = tokenizer.nextToken(), port = tokenizer.nextToken();
         
-        conect(host, port);
-        send(message);
+        try {
+            conect(host, port);
+            send(message);
+        } catch (string e) {
+            cout << e;
+        }
+        
         close();
         
     }
@@ -271,7 +286,7 @@ void Client::send_message(string connit) {
 string Client::format_vector_clock() {
     
     if ((*vc).empty()) {
-        cout << "No vector clock " << endl;
+        cout << "No vector clock" << endl;
         return NULL;
     }
     
@@ -302,7 +317,10 @@ string* Client::random_addr() {
     cout << endl;
     
     if ((*nodes).empty()) {
-        cout << "> No nodes active in tracker" << endl;
+        
+        if (DEBUG_NODE)
+            cout << "> No nodes active in tracker" << endl;
+        
         return NULL;
     }
     

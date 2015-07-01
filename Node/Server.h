@@ -37,6 +37,7 @@ public:
     bool is_vector_clock_lq(string);
     list<string> check_queue_messages();
     void print_messages(list<string>);
+    bool is_node_exists(string);
 };
 
 typedef struct {
